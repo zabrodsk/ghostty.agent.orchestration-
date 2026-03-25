@@ -2,14 +2,14 @@ import SwiftUI
 
 /// AI state indicator with animations
 struct AIStateIndicator: View {
-    enum State {
+    enum IndicatorState {
         case active
         case waitingInput
         case processing
         case done
     }
     
-    let state: State
+    let state: IndicatorState
     let isAnimating: Bool
     
     @State private var rotationAngle: Double = 0
