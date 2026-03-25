@@ -7015,7 +7015,7 @@ pub const Keybinds = struct {
             );
             try self.set.put(
                 alloc,
-                .{ .key = .{ .unicode = 'o' }, .mods = .{ .super = true, .shift = true } },
+                .{ .key = .{ .unicode = 'r' }, .mods = .{ .super = true } },
                 .toggle_orchestration_panel,
             );
             try self.set.put(

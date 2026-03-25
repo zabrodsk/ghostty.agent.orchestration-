@@ -213,7 +213,7 @@ fi
 ## Usage
 
 ### Keyboard Shortcuts
-- **Cmd+Shift+O** (macOS) - Toggle orchestration panel
+- **Cmd+R** (macOS) - Toggle orchestration panel
 - **Ctrl+Shift+O** (Linux) - Toggle orchestration panel
 
 ### State Indicators

@@ -114,7 +114,7 @@ To complete the implementation, integrate into Ghostty:
 - [ ] Wire `OrchestrationViewModel` to Zig state
 - [ ] Add panel toggle to `Ghostty.App.swift`
 - [ ] Add menu item in `AppDelegate.swift`
-- [ ] Implement Cmd+Shift+O keyboard shortcut
+- [ ] Implement Cmd+R keyboard shortcut
 
 ### Phase 4: IPC Completion
 - [ ] Implement Unix socket server in `IPCOrchestrator`
