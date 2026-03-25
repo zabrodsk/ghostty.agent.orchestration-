@@ -1,6 +1,6 @@
 import Cocoa
 
-struct ColorizedGhosttyIcon {
+struct ColorizedGhosttyIcon: @unchecked Sendable {
     /// The colors that make up the gradient of the screen.
     let screenColors: [NSColor]
 
