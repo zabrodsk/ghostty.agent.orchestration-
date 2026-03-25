@@ -138,6 +138,7 @@ private extension NSDockTile {
     }
 }
 
-// This is required because of the DispatchQueue call above. This doesn't
-// feel right but I don't know a better way to solve this.
+// These are required because of the DispatchQueue.main.async call above which
+// captures these types across concurrency boundaries in Swift 6.
 extension NSDockTile: @unchecked @retroactive Sendable {}
+extension NSImage: @unchecked @retroactive Sendable {}
