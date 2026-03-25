@@ -15,10 +15,23 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Select Xcode 17 (macOS 26 SDK required)
+        run: |
+          # NSGlassEffectView and ConcentricRectangle require macOS 26 SDK (Xcode 17+).
+          XCODE17=$(ls -d /Applications/Xcode_17*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE17" ]; then
+            sudo xcode-select -s "$XCODE17"
+            echo "Selected Xcode: $XCODE17"
+          else
+            echo "Xcode 17 not found. Available versions:"
+            ls /Applications/Xcode*.app 2>/dev/null || true
+          fi
+          xcodebuild -version
+
       - name: Install Zig
         run: |
           brew install zig
-      
+
       - name: Build xcframework (Zig step)
         run: |
           # Build only the xcframework (GhosttyKit) for arm64.
