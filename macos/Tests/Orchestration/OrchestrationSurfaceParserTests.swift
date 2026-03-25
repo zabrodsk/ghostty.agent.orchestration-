@@ -87,4 +87,30 @@ struct OrchestrationSurfaceParserTests {
         #expect(OrchestrationSurfaceParser.shortCwd("/") == "/")
         #expect(OrchestrationSurfaceParser.shortCwd("") == "~")
     }
+
+    @Test func aiDetectorFindsCodexFromSurfaceMetadata() {
+        let detection = OrchestrationAIDetector.detect(
+            title: "codex",
+            parsedTitle: "codex",
+            cwd: "/Users/alice/workspace/.omx",
+            activeProcess: "Running",
+            activityState: .busy
+        )
+
+        #expect(detection.toolName == "Codex")
+        #expect(detection.state == .ai_processing)
+    }
+
+    @Test func aiDetectorRespectsWaitingInputState() {
+        let detection = OrchestrationAIDetector.detect(
+            title: "GitHub Copilot",
+            parsedTitle: "GitHub Copilot",
+            cwd: "/Users/alice/repo",
+            activeProcess: "zsh",
+            activityState: .waiting_input
+        )
+
+        #expect(detection.toolName == "GitHub Copilot")
+        #expect(detection.state == .ai_waiting_input)
+    }
 }

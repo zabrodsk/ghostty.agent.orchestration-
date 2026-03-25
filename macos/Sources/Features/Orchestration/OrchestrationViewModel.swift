@@ -116,6 +116,13 @@ class OrchestrationViewModel: ObservableObject {
                     cwd: surface.pwd,
                     processExited: surface.processExited
                 )
+                let aiDetection = OrchestrationAIDetector.detect(
+                    title: surface.title,
+                    parsedTitle: metadata.title,
+                    cwd: metadata.cwd,
+                    activeProcess: metadata.activeProcessText,
+                    activityState: metadata.activityState
+                )
                 return SurfaceDisplayState(
                     surfaceView: surface,
                     title: metadata.title,
@@ -123,8 +130,8 @@ class OrchestrationViewModel: ObservableObject {
                     activeProcess: metadata.activeProcessText,
                     lastCommand: "",
                     activityState: metadata.activityState,
-                    aiState: .none,
-                    aiToolName: nil
+                    aiState: aiDetection.state,
+                    aiToolName: aiDetection.toolName
                 )
             }
         }
@@ -139,6 +146,66 @@ class OrchestrationViewModel: ObservableObject {
 
     private static func postGlobalStateDidChange() {
         NotificationCenter.default.post(name: .orchestrationGlobalStateDidChange, object: nil)
+    }
+}
+
+struct OrchestrationAIDetection {
+    let state: SurfaceDisplayState.AIState
+    let toolName: String?
+}
+
+enum OrchestrationAIDetector {
+    private static let codexTokens = ["codex", "cursor", "omx"]
+    private static let copilotTokens = ["github copilot", "copilot"]
+    private static let claudeTokens = ["claude"]
+    private static let aiderTokens = ["aider"]
+
+    static func detect(
+        title rawTitle: String,
+        parsedTitle: String,
+        cwd: String,
+        activeProcess: String,
+        activityState: SurfaceDisplayState.ActivityState
+    ) -> OrchestrationAIDetection {
+        let haystack = [
+            rawTitle.lowercased(),
+            parsedTitle.lowercased(),
+            cwd.lowercased(),
+            activeProcess.lowercased()
+        ].joined(separator: " ")
+
+        let toolName: String?
+        if containsAnyToken(haystack, tokens: copilotTokens) {
+            toolName = "GitHub Copilot"
+        } else if containsAnyToken(haystack, tokens: codexTokens) {
+            toolName = "Codex"
+        } else if containsAnyToken(haystack, tokens: claudeTokens) {
+            toolName = "Claude"
+        } else if containsAnyToken(haystack, tokens: aiderTokens) {
+            toolName = "Aider"
+        } else {
+            toolName = nil
+        }
+
+        guard toolName != nil else {
+            return .init(state: .none, toolName: nil)
+        }
+
+        let aiState: SurfaceDisplayState.AIState
+        switch activityState {
+        case .waiting_input:
+            aiState = .ai_waiting_input
+        case .busy:
+            aiState = .ai_processing
+        case .idle:
+            aiState = .ai_done
+        }
+
+        return .init(state: aiState, toolName: toolName)
+    }
+
+    private static func containsAnyToken(_ value: String, tokens: [String]) -> Bool {
+        tokens.contains(where: { value.contains($0) })
     }
 }
 
