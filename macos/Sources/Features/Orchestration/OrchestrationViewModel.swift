@@ -96,7 +96,10 @@ class OrchestrationViewModel: ObservableObject {
     }
 
     private func mapGlobalSurfaces(from controllers: [BaseTerminalController]) -> [SurfaceDisplayState] {
-        let orderedWindowIndex = Dictionary(uniqueKeysWithValues: NSApp.orderedWindows.enumerated().map { ($0.element.windowNumber, $0.offset) })
+        var orderedWindowIndex: [Int: Int] = [:]
+        for (offset, window) in NSApp.orderedWindows.enumerated() {
+            orderedWindowIndex[window.windowNumber, default: offset] = orderedWindowIndex[window.windowNumber] ?? offset
+        }
         let sortedControllers = controllers.sorted { lhs, rhs in
             let lhsOrder = lhs.window.flatMap { orderedWindowIndex[$0.windowNumber] } ?? Int.max
             let rhsOrder = rhs.window.flatMap { orderedWindowIndex[$0.windowNumber] } ?? Int.max
