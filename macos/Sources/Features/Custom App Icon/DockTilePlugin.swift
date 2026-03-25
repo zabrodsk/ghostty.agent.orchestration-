@@ -126,8 +126,10 @@ class DockTilePlugin: NSObject, NSDockTilePlugIn {
 }
 
 private extension NSDockTile {
-    func setIcon(_ newIcon: NSImage) {
+    func setIcon(_ newIcon: sending NSImage) {
         // Update the Dock tile on the main thread.
+        // `sending` transfers exclusive access to newIcon into the closure,
+        // satisfying Swift 6 region-based isolation requirements.
         DispatchQueue.main.async {
             let iconView = NSImageView(frame: CGRect(origin: .zero, size: self.size))
             iconView.wantsLayer = true
@@ -138,7 +140,6 @@ private extension NSDockTile {
     }
 }
 
-// These are required because of the DispatchQueue.main.async call above which
-// captures these types across concurrency boundaries in Swift 6.
+// This is required because of the DispatchQueue call above. This doesn't
+// feel right but I don't know a better way to solve this.
 extension NSDockTile: @unchecked @retroactive Sendable {}
-extension NSImage: @unchecked @retroactive Sendable {}
