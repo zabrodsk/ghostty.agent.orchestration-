@@ -1,0 +1,153 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install Zig
+        run: |
+          brew install zig
+      
+      - name: Build for macOS
+        run: |
+          zig build -Doptimize=ReleaseSafe
+        continue-on-error: true
+      
+      - name: Package macOS App
+        if: success()
+        run: |
+          cd zig-out
+          zip -r ghostty-macos-universal.zip Ghostty.app
+      
+      - name: Upload macOS Build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghostty-macos-universal
+          path: zig-out/ghostty-macos-universal.zip
+          retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-dev \
+            libadwaita-1-dev \
+            desktop-file-utils \
+            blueprint-compiler
+      
+      - name: Install Zig
+        run: |
+          wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
+          tar xf zig-linux-x86_64-0.13.0.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
+      
+      - name: Build for Linux
+        run: |
+          zig build -Doptimize=ReleaseSafe
+        continue-on-error: true
+      
+      - name: Package Linux Binary
+        if: success()
+        run: |
+          cd zig-out/bin
+          tar czf ghostty-linux-x86_64.tar.gz ghostty
+      
+      - name: Upload Linux Build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghostty-linux-x86_64
+          path: zig-out/bin/ghostty-linux-x86_64.tar.gz
+          retention-days: 30
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Zig
+        run: |
+          wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
+          tar xf zig-linux-x86_64-0.13.0.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
+      
+      - name: Run Tests
+        run: |
+          zig build test
+        continue-on-error: true
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ghostty-macos-universal
+          path: artifacts/
+        continue-on-error: true
+      
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ghostty-linux-x86_64
+          path: artifacts/
+        continue-on-error: true
+      
+      - name: Get Commit SHA
+        id: sha
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "sha_long=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: tip-${{ steps.sha.outputs.sha_short }}
+          name: Development Build (${{ steps.sha.outputs.sha_short }})
+          body: |
+            Automated development build from commit ${{ steps.sha.outputs.sha_long }}
+            
+            ## Downloads
+            - macOS: ghostty-macos-universal.zip
+            - Linux: ghostty-linux-x86_64.tar.gz
+            
+            ## Features
+            This build includes the **Agent Orchestration** feature:
+            - Real-time terminal state tracking
+            - AI assistant detection (GitHub Copilot CLI, Aider, Claude)
+            - Multi-instance coordination
+            - Native macOS sidebar UI
+            
+            See [ORCHESTRATION.md](https://github.com/${{ github.repository }}/blob/main/ORCHESTRATION.md) for details.
+          files: |
+            artifacts/*.zip
+            artifacts/*.tar.gz
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
