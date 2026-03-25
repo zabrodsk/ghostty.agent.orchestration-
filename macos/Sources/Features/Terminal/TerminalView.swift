@@ -92,9 +92,9 @@ struct TerminalView<ViewModel: TerminalViewModel>: View {
 
                     if viewModel.orchestrationPanelVisible {
                         SplitView(.horizontal, $orchestrationSplit, dividerColor: ghostty.config.splitDividerColor, left: {
-                            OrchestrationPanel(viewModel: viewModel.orchestrationViewModel)
-                        }, right: {
                             terminalTreeView
+                        }, right: {
+                            OrchestrationPanel(viewModel: viewModel.orchestrationViewModel)
                         }, onEqualize: {
                             orchestrationSplit = 0.72
                         })
@@ -168,7 +168,7 @@ private struct OrchestrationToggleOverlay: View {
             HStack {
                 Spacer()
                 Button(action: action) {
-                    Image(systemName: "sidebar.left")
+                    Image(systemName: "sidebar.right")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(isVisible ? .primary : .secondary)
                         .frame(width: 20, height: 20)
