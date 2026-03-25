@@ -19,29 +19,43 @@ jobs:
         run: |
           brew install zig
       
-      - name: Build for macOS
+      - name: Build xcframework (Zig step)
         run: |
-          # -Dxcframework-target=native builds only for the runner's native arch (arm64),
-          # avoiding the x86_64 Swift compilation that fails without cross-compile toolchain.
-          zig build -Doptimize=ReleaseSafe -Dxcframework-target=native
-          # Show what was produced
-          if [ -d "zig-out" ]; then
-            ls -la zig-out/
+          # Build only the xcframework (GhosttyKit) for arm64.
+          # -Demit-macos-app=false skips the zig-orchestrated xcodebuild so we
+          # can run xcodebuild manually below with full output visibility.
+          zig build -Doptimize=ReleaseSafe -Dxcframework-target=native -Demit-macos-app=false
+          echo "=== zig-out after xcframework build ==="
+          ls -la zig-out/ || true
+
+      - name: Build macOS app bundle (xcodebuild)
+        run: |
+          # Run xcodebuild directly so its full output (including Swift errors) is visible.
+          # CODE_SIGN_* overrides skip codesigning, which requires certificates not present in CI.
+          set -o pipefail
+          cd macos
+          xcodebuild \
+            -target Ghostty \
+            -configuration ReleaseLocal \
+            -arch arm64 \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1
+          # Copy the resulting app bundle into zig-out so the packaging step can find it.
+          if [ -d "build/ReleaseLocal/Ghostty.app" ]; then
+            cp -R build/ReleaseLocal/Ghostty.app ../zig-out/
+            echo "Ghostty.app copied to zig-out/"
+          else
+            echo "ERROR: build/ReleaseLocal/Ghostty.app not found"
+            ls -la build/ReleaseLocal/ || true
+            exit 1
           fi
-      
+
       - name: Package macOS App
         if: success()
         run: |
-          # Find the app bundle (might be Ghostty.app or ghostty.app)
-          if [ -d "zig-out/Ghostty.app" ]; then
-            cd zig-out && zip -r ghostty-macos-universal.zip Ghostty.app
-          elif [ -f "zig-out/bin/ghostty" ]; then
-            mkdir -p zig-out/package && cp zig-out/bin/ghostty zig-out/package/
-            cd zig-out && zip -r ghostty-macos-universal.zip package/
-          else
-            echo "No build artifacts found"
-            exit 1
-          fi
+          cd zig-out && zip -r ghostty-macos-universal.zip Ghostty.app
       
       - name: Upload macOS Build
         if: success()
