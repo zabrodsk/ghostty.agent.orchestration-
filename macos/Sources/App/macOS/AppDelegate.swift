@@ -74,6 +74,7 @@ class AppDelegate: NSObject,
     @IBOutlet private var menuReadonly: NSMenuItem?
     @IBOutlet private var menuQuickTerminal: NSMenuItem?
     @IBOutlet private var menuTerminalInspector: NSMenuItem?
+    @IBOutlet private var menuOrchestrationPanel: NSMenuItem?
     @IBOutlet private var menuCommandPalette: NSMenuItem?
 
     @IBOutlet private var menuEqualizeSplits: NSMenuItem?
@@ -1123,6 +1124,7 @@ extension AppDelegate {
         self.menuQuickTerminal?.setImageIfDesired(systemSymbolName: "apple.terminal")
         self.menuChangeTabTitle?.setImageIfDesired(systemSymbolName: "pencil.line")
         self.menuTerminalInspector?.setImageIfDesired(systemSymbolName: "scope")
+        self.menuOrchestrationPanel?.setImageIfDesired(systemSymbolName: "sidebar.right")
         self.menuReadonly?.setImageIfDesired(systemSymbolName: "eye.fill")
         self.menuSetAsDefaultTerminal?.setImageIfDesired(systemSymbolName: "star.fill")
         self.menuToggleFullScreen?.setImageIfDesired(systemSymbolName: "square.arrowtriangle.4.outward")
@@ -1201,6 +1203,7 @@ extension AppDelegate {
         syncMenuShortcut(config, action: "toggle_visibility", menuItem: self.menuToggleVisibility)
         syncMenuShortcut(config, action: "toggle_window_float_on_top", menuItem: self.menuFloatOnTop)
         syncMenuShortcut(config, action: "inspector:toggle", menuItem: self.menuTerminalInspector)
+        syncMenuShortcut(config, action: "toggle_orchestration_panel", menuItem: self.menuOrchestrationPanel)
         syncMenuShortcut(config, action: "toggle_command_palette", menuItem: self.menuCommandPalette)
 
         syncMenuShortcut(config, action: "toggle_secure_input", menuItem: self.menuSecureInput)

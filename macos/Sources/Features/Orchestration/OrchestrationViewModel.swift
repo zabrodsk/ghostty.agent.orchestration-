@@ -1,53 +1,67 @@
 import SwiftUI
 import GhosttyKit
-import Combine
 
 /// View model for orchestration panel
 class OrchestrationViewModel: ObservableObject {
     @Published var surfaces: [SurfaceDisplayState] = []
-    
-    private var updateTimer: Timer?
-    private var ghosttyApp: Ghostty.App?
-    
-    init() {
-        // Initialize with app reference if available
+    @Published var selectedSurfaceId: Ghostty.SurfaceView.ID?
+
+    private var focusHandler: ((Ghostty.SurfaceView) -> Void)?
+    private var latestSurfaceTree: SplitTree<Ghostty.SurfaceView> = .init()
+    private var latestFocusedSurface: Ghostty.SurfaceView?
+
+    func setFocusHandler(_ handler: @escaping (Ghostty.SurfaceView) -> Void) {
+        focusHandler = handler
     }
-    
-    func startMonitoring() {
-        // Start periodic updates
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            self?.refresh()
+
+    func update(
+        surfaceTree: SplitTree<Ghostty.SurfaceView>,
+        focusedSurface: Ghostty.SurfaceView?
+    ) {
+        latestSurfaceTree = surfaceTree
+        latestFocusedSurface = focusedSurface
+
+        let mapped = surfaceTree.map { surface in
+            SurfaceDisplayState(
+                surfaceView: surface,
+                title: surface.title.isEmpty ? "Terminal" : surface.title,
+                cwd: surface.pwd ?? "",
+                activeProcess: "",
+                lastCommand: "",
+                activityState: surface.processExited ? .idle : .busy,
+                aiState: .none,
+                aiToolName: nil
+            )
         }
-        
-        // Initial refresh
-        refresh()
+
+        surfaces = mapped
+
+        if let focusedSurface, mapped.contains(where: { $0.id == focusedSurface.id }) {
+            selectedSurfaceId = focusedSurface.id
+            return
+        }
+
+        if let selectedSurfaceId, mapped.contains(where: { $0.id == selectedSurfaceId }) {
+            return
+        }
+
+        selectedSurfaceId = mapped.first?.id
     }
-    
-    func stopMonitoring() {
-        updateTimer?.invalidate()
-        updateTimer = nil
-    }
-    
+
     func refresh() {
-        // TODO: Query orchestration state from Ghostty core
-        // For now, create mock data
-        
-        DispatchQueue.main.async {
-            // This will be replaced with actual bridge to Zig orchestration code
-            // self.surfaces = fetchSurfacesFromGhostty()
-        }
+        update(surfaceTree: latestSurfaceTree, focusedSurface: latestFocusedSurface)
     }
-    
-    func focusSurface(surfaceId: UInt64) {
-        // TODO: Call Ghostty focus API
-        // ghosttyApp?.focusSurface(withId: surfaceId)
-        print("Focus surface: \(surfaceId)")
+
+    func focusSurface(surfaceId: Ghostty.SurfaceView.ID) {
+        guard let surface = surfaces.first(where: { $0.id == surfaceId })?.surfaceView else { return }
+        selectedSurfaceId = surfaceId
+        focusHandler?(surface)
     }
 }
 
 /// Display state for a terminal surface (Swift representation)
 struct SurfaceDisplayState: Identifiable {
-    let surfaceId: UInt64
+    let surfaceView: Ghostty.SurfaceView
     let title: String
     let cwd: String
     let activeProcess: String
@@ -55,24 +69,24 @@ struct SurfaceDisplayState: Identifiable {
     let activityState: ActivityState
     let aiState: AIState
     let aiToolName: String?
-    
-    var id: UInt64 { surfaceId }
-    
+
+    var id: Ghostty.SurfaceView.ID { surfaceView.id }
+
     var cwdShort: String {
         // Get last 2 path components
         let components = cwd.split(separator: "/")
         if components.count > 2 {
-            return "…/" + components.suffix(2).joined(separator: "/")
+            return ".../" + components.suffix(2).joined(separator: "/")
         }
         return cwd
     }
-    
+
     enum ActivityState {
         case idle
         case busy
         case waiting_input
     }
-    
+
     enum AIState {
         case none
         case ai_active

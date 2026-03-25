@@ -51,6 +51,12 @@ class BaseTerminalController: NSWindowController,
     /// Set if the terminal view should show the update overlay.
     @Published var updateOverlayIsVisible: Bool = false
 
+    /// Set if the orchestration panel should be visible.
+    @Published var orchestrationPanelVisible: Bool = false
+
+    /// View model for orchestration panel state.
+    let orchestrationViewModel = OrchestrationViewModel()
+
     /// True when any surface in this controller currently has an active bell.
     @Published private(set) var bell: Bool = false
 
@@ -140,6 +146,10 @@ class BaseTerminalController: NSWindowController,
         // Initialize our initial surface.
         guard let ghostty_app = ghostty.app else { preconditionFailure("app must be loaded") }
         self.surfaceTree = tree ?? .init(view: Ghostty.SurfaceView(ghostty_app, baseConfig: base))
+        orchestrationViewModel.setFocusHandler { [weak self] surface in
+            self?.focusSurface(surface)
+        }
+        orchestrationViewModel.update(surfaceTree: surfaceTree, focusedSurface: focusedSurface)
 
         // Setup our bell state for the window
         setupBellNotificationPublisher()
@@ -292,6 +302,8 @@ class BaseTerminalController: NSWindowController,
         if to.isEmpty {
             focusedSurface = nil
         }
+
+        orchestrationViewModel.update(surfaceTree: to, focusedSurface: focusedSurface)
     }
 
     /// Update all surfaces with the focus state. This ensures that libghostty has an accurate view about
@@ -804,6 +816,7 @@ class BaseTerminalController: NSWindowController,
     func focusedSurfaceDidChange(to: Ghostty.SurfaceView?) {
         let lastFocusedSurface = focusedSurface
         focusedSurface = to
+        orchestrationViewModel.update(surfaceTree: surfaceTree, focusedSurface: to)
 
         // Important to cancel any prior subscriptions
         focusedSurfaceCancellables = []
@@ -1399,6 +1412,10 @@ class BaseTerminalController: NSWindowController,
         commandPaletteIsShowing.toggle()
     }
 
+    @IBAction func toggleOrchestrationPanel(_ sender: Any?) {
+        orchestrationPanelVisible.toggle()
+    }
+
     @IBAction func find(_ sender: Any) {
         focusedSurface?.find(sender)
     }
@@ -1455,6 +1472,10 @@ extension BaseTerminalController: NSMenuItemValidation {
         switch item.action {
         case #selector(findHide):
             return focusedSurface?.searchState != nil
+
+        case #selector(toggleOrchestrationPanel(_:)):
+            item.state = orchestrationPanelVisible ? .on : .off
+            return true
 
         default:
             return true

@@ -42,6 +42,7 @@
                 <outlet property="menuNewWindow" destination="Was-JA-tGl" id="lK7-3I-CPG"/>
                 <outlet property="menuNextSplit" destination="bD7-ei-wKU" id="LeT-xw-eh4"/>
                 <outlet property="menuOpenConfig" destination="BOF-NM-1cW" id="Nze-Go-glw"/>
+                <outlet property="menuOrchestrationPanel" destination="YQv-3h-hF8" id="r3B-s9-P0d"/>
                 <outlet property="menuPaste" destination="i27-pK-umN" id="ICc-X2-gV3"/>
                 <outlet property="menuPasteSelection" destination="akq-ov-Jjh" id="GS8-aQ-hVw"/>
                 <outlet property="menuPreviousSplit" destination="Lic-px-1wg" id="Rto-CG-yRe"/>
@@ -368,6 +369,12 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleTerminalInspector:" target="-1" id="87m-3R-fQl"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Orchestration Panel" id="YQv-3h-hF8">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleOrchestrationPanel:" target="-1" id="2m5-Zz-8m3"/>
                                 </connections>
                             </menuItem>
                         </items>

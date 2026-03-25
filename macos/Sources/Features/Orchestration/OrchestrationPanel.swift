@@ -4,8 +4,7 @@ import GhosttyKit
 /// Main orchestration panel showing all terminal states
 struct OrchestrationPanel: View {
     @ObservedObject var viewModel: OrchestrationViewModel
-    @State private var selectedSurfaceId: UInt64?
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -31,13 +30,12 @@ struct OrchestrationPanel: View {
             // Terminal list
             ScrollView {
                 LazyVStack(spacing: 1) {
-                    ForEach(viewModel.surfaces, id: \.surfaceId) { surface in
+                    ForEach(viewModel.surfaces) { surface in
                         TerminalCardView(
                             surface: surface,
-                            isSelected: selectedSurfaceId == surface.surfaceId,
+                            isSelected: viewModel.selectedSurfaceId == surface.id,
                             onTap: {
-                                selectedSurfaceId = surface.surfaceId
-                                viewModel.focusSurface(surfaceId: surface.surfaceId)
+                                viewModel.focusSurface(surfaceId: surface.id)
                             }
                         )
                     }
@@ -45,11 +43,5 @@ struct OrchestrationPanel: View {
             }
         }
         .frame(minWidth: 250, maxWidth: 400)
-        .onAppear {
-            viewModel.startMonitoring()
-        }
-        .onDisappear {
-            viewModel.stopMonitoring()
-        }
     }
 }
