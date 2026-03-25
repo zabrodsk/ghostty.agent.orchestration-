@@ -21,8 +21,10 @@ jobs:
       
       - name: Build for macOS
         run: |
-          zig build -Doptimize=ReleaseSafe || true
-          # Check if build artifacts exist
+          # -Dxcframework-target=native builds only for the runner's native arch (arm64),
+          # avoiding the x86_64 Swift compilation that fails without cross-compile toolchain.
+          zig build -Doptimize=ReleaseSafe -Dxcframework-target=native
+          # Show what was produced
           if [ -d "zig-out" ]; then
             ls -la zig-out/
           fi
@@ -67,19 +69,19 @@ jobs:
       
       - name: Install Zig
         run: |
-          wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
-          tar xf zig-linux-x86_64-0.13.0.tar.xz
-          echo "$PWD/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
-      
+          wget https://ziglang.org/download/0.15.2/zig-linux-x86_64-0.15.2.tar.xz
+          tar xf zig-linux-x86_64-0.15.2.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.15.2" >> $GITHUB_PATH
+
       - name: Build for Linux
         run: |
-          zig build -Doptimize=ReleaseSafe || true
+          zig build -Doptimize=ReleaseSafe
           # Check if build artifacts exist
           if [ -d "zig-out" ]; then
             ls -la zig-out/
             find zig-out -name "ghostty" -o -name "ghostty.bin"
           fi
-      
+
       - name: Package Linux Binary
         if: success()
         run: |
@@ -108,10 +110,10 @@ jobs:
       
       - name: Install Zig
         run: |
-          wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
-          tar xf zig-linux-x86_64-0.13.0.tar.xz
-          echo "$PWD/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
-      
+          wget https://ziglang.org/download/0.15.2/zig-linux-x86_64-0.15.2.tar.xz
+          tar xf zig-linux-x86_64-0.15.2.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.15.2" >> $GITHUB_PATH
+
       - name: Run Tests
         run: |
           zig build test
@@ -119,7 +121,7 @@ jobs:
 
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build-macos, build-linux]
+    needs: [build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
