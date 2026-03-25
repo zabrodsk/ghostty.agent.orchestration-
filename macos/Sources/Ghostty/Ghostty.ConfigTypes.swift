@@ -11,6 +11,7 @@ extension Ghostty {
     /// macos-icon
     enum MacOSIcon: String, Sendable {
         case official
+        case beta
         case blueprint
         case chalkboard
         case glass
@@ -26,6 +27,7 @@ extension Ghostty {
         var assetName: String? {
             switch self {
             case .official: return nil
+            case .beta: return nil
             case .blueprint: return "BlueprintImage"
             case .chalkboard: return "ChalkboardImage"
             case .microchip: return "MicrochipImage"

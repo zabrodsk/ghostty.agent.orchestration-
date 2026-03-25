@@ -132,6 +132,11 @@ struct ConfigTests {
         #expect(config.macosIcon == .official)
     }
 
+    @Test func macosIconSupportsBeta() throws {
+        let config = try TemporaryConfig("macos-icon = beta")
+        #expect(config.macosIcon == .beta)
+    }
+
     @Test func macosIconFrameDefaultsToAluminum() throws {
         let config = try TemporaryConfig("")
         #expect(config.macosIconFrame == .aluminum)

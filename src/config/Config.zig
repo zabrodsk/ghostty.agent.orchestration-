@@ -3385,6 +3385,8 @@ keybind: Keybinds = .{},
 /// Valid values:
 ///
 ///  * `official` - Use the official Ghostty icon.
+///  * `beta` - Use the official icon with a BETA badge overlay. If a dedicated
+///    `BetaImage` asset is bundled, that asset is used instead.
 ///  * `blueprint`, `chalkboard`, `microchip`, `glass`, `holographic`,
 ///    `paper`, `retro`, `xray` - Official variants of the Ghostty icon
 ///    hand-created by artists (no AI).
@@ -7013,6 +7015,11 @@ pub const Keybinds = struct {
             );
             try self.set.put(
                 alloc,
+                .{ .key = .{ .unicode = 'o' }, .mods = .{ .super = true, .shift = true } },
+                .toggle_orchestration_panel,
+            );
+            try self.set.put(
+                alloc,
                 .{ .key = .{ .unicode = '[' }, .mods = .{ .super = true } },
                 .{ .goto_split = .previous },
             );
@@ -8970,6 +8977,7 @@ pub const MacHidden = enum {
 /// format at all.
 pub const MacAppIcon = enum {
     official,
+    beta,
     blueprint,
     chalkboard,
     microchip,

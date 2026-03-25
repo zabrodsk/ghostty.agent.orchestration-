@@ -41,6 +41,9 @@ protocol TerminalViewModel: ObservableObject {
 
     /// View model backing orchestration sidebar.
     var orchestrationViewModel: OrchestrationViewModel { get }
+
+    /// Toggle orchestration sidebar visibility.
+    func toggleOrchestrationPanel()
 }
 
 /// The main terminal view. This terminal view supports splits.
@@ -116,6 +119,12 @@ struct TerminalView<ViewModel: TerminalViewModel>: View {
                 if viewModel.updateOverlayIsVisible {
                     UpdateOverlay()
                 }
+
+                OrchestrationToggleOverlay(
+                    isVisible: viewModel.orchestrationPanelVisible,
+                    isCommandPaletteShowing: viewModel.commandPaletteIsShowing,
+                    action: { viewModel.toggleOrchestrationPanel() }
+                )
             }
             .frame(maxWidth: .greatestFiniteMagnitude, maxHeight: .greatestFiniteMagnitude)
         }
@@ -146,6 +155,33 @@ struct TerminalView<ViewModel: TerminalViewModel>: View {
             }
             .frame(idealWidth: lastFocusedSurface?.value?.initialSize?.width,
                    idealHeight: lastFocusedSurface?.value?.initialSize?.height)
+    }
+}
+
+private struct OrchestrationToggleOverlay: View {
+    let isVisible: Bool
+    let isCommandPaletteShowing: Bool
+    let action: () -> Void
+
+    var body: some View {
+        VStack {
+            HStack {
+                Spacer()
+                Button(action: action) {
+                    Image(systemName: "sidebar.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(isVisible ? .primary : .secondary)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .help(isVisible ? "Hide Orchestration Sidebar" : "Show Orchestration Sidebar")
+                .padding(.top, 8)
+                .padding(.trailing, 8)
+                .opacity(isCommandPaletteShowing ? 0 : 1)
+                .allowsHitTesting(!isCommandPaletteShowing)
+            }
+            Spacer()
+        }
     }
 }
 

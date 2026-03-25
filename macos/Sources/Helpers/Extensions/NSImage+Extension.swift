@@ -87,4 +87,60 @@ extension NSImage {
 
         return newImage
     }
+
+    /// Apply a visible beta badge to the icon.
+    func badgedForBeta() -> NSImage? {
+        let output = NSImage(size: size)
+        output.lockFocus()
+        defer { output.unlockFocus() }
+
+        draw(at: .zero, from: .zero, operation: .sourceOver, fraction: 1.0)
+
+        let minDimension = min(size.width, size.height)
+        guard minDimension > 0 else { return nil }
+
+        let horizontalPadding = minDimension * 0.05
+        let verticalPadding = minDimension * 0.06
+        let badgeHeight = minDimension * 0.24
+        let badgeWidth = minDimension * 0.62
+        let badgeRect = CGRect(
+            x: size.width - badgeWidth - horizontalPadding,
+            y: verticalPadding,
+            width: badgeWidth,
+            height: badgeHeight
+        )
+
+        let badgePath = NSBezierPath(
+            roundedRect: badgeRect,
+            xRadius: badgeHeight * 0.34,
+            yRadius: badgeHeight * 0.34
+        )
+        NSColor(red: 0.86, green: 0.11, blue: 0.23, alpha: 0.96).setFill()
+        badgePath.fill()
+
+        NSColor.white.withAlphaComponent(0.9).setStroke()
+        badgePath.lineWidth = max(2, minDimension * 0.015)
+        badgePath.stroke()
+
+        let text = "BETA"
+        let fontSize = badgeHeight * 0.48
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .heavy),
+            .foregroundColor: NSColor.white,
+            .paragraphStyle: paragraphStyle,
+        ]
+
+        let textSize = text.size(withAttributes: attributes)
+        let textRect = CGRect(
+            x: badgeRect.minX,
+            y: badgeRect.minY + (badgeRect.height - textSize.height) / 2.0,
+            width: badgeRect.width,
+            height: textSize.height
+        )
+        text.draw(in: textRect, withAttributes: attributes)
+
+        return output
+    }
 }

@@ -178,6 +178,11 @@ class BaseTerminalController: NSWindowController,
             object: nil)
         center.addObserver(
             self,
+            selector: #selector(ghosttyOrchestrationPanelDidToggle(_:)),
+            name: .ghosttyOrchestrationPanelDidToggle,
+            object: nil)
+        center.addObserver(
+            self,
             selector: #selector(ghosttyMaximizeDidToggle(_:)),
             name: .ghosttyMaximizeDidToggle,
             object: nil)
@@ -586,6 +591,12 @@ class BaseTerminalController: NSWindowController,
         guard let surfaceView = notification.object as? Ghostty.SurfaceView else { return }
         guard surfaceTree.contains(surfaceView) else { return }
         toggleCommandPalette(nil)
+    }
+
+    @objc private func ghosttyOrchestrationPanelDidToggle(_ notification: Notification) {
+        guard let surfaceView = notification.object as? Ghostty.SurfaceView else { return }
+        guard surfaceTree.contains(surfaceView) else { return }
+        toggleOrchestrationPanel()
     }
 
     @objc private func ghosttyMaximizeDidToggle(_ notification: Notification) {
@@ -1412,8 +1423,25 @@ class BaseTerminalController: NSWindowController,
         commandPaletteIsShowing.toggle()
     }
 
+    func toggleOrchestrationPanel() {
+        setOrchestrationPanelVisible(!orchestrationPanelVisible)
+    }
+
     @IBAction func toggleOrchestrationPanel(_ sender: Any?) {
-        orchestrationPanelVisible.toggle()
+        toggleOrchestrationPanel()
+    }
+
+    func setOrchestrationPanelVisible(
+        _ visible: Bool,
+        syncTabGroup: Bool = true
+    ) {
+        orchestrationPanelVisible = visible
+        guard syncTabGroup, let windows = window?.tabGroup?.windows else { return }
+        for tabWindow in windows {
+            guard let controller = tabWindow.windowController as? BaseTerminalController else { continue }
+            guard controller !== self else { continue }
+            controller.setOrchestrationPanelVisible(visible, syncTabGroup: false)
+        }
     }
 
     @IBAction func find(_ sender: Any) {

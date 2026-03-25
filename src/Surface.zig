@@ -5605,6 +5605,12 @@ pub fn performBindingAction(self: *Surface, action: input.Binding.Action) !bool 
             {},
         ),
 
+        .toggle_orchestration_panel => return try self.rt_app.performAction(
+            .{ .surface = self },
+            .toggle_orchestration_panel,
+            {},
+        ),
+
         .toggle_background_opacity => return try self.rt_app.performAction(
             .{ .surface = self },
             .toggle_background_opacity,
