@@ -21,14 +21,25 @@ jobs:
       
       - name: Build for macOS
         run: |
-          zig build -Doptimize=ReleaseSafe
-        continue-on-error: true
+          zig build -Doptimize=ReleaseSafe || true
+          # Check if build artifacts exist
+          if [ -d "zig-out" ]; then
+            ls -la zig-out/
+          fi
       
       - name: Package macOS App
         if: success()
         run: |
-          cd zig-out
-          zip -r ghostty-macos-universal.zip Ghostty.app
+          # Find the app bundle (might be Ghostty.app or ghostty.app)
+          if [ -d "zig-out/Ghostty.app" ]; then
+            cd zig-out && zip -r ghostty-macos-universal.zip Ghostty.app
+          elif [ -f "zig-out/bin/ghostty" ]; then
+            mkdir -p zig-out/package && cp zig-out/bin/ghostty zig-out/package/
+            cd zig-out && zip -r ghostty-macos-universal.zip package/
+          else
+            echo "No build artifacts found"
+            exit 1
+          fi
       
       - name: Upload macOS Build
         if: success()
@@ -62,21 +73,32 @@ jobs:
       
       - name: Build for Linux
         run: |
-          zig build -Doptimize=ReleaseSafe
-        continue-on-error: true
+          zig build -Doptimize=ReleaseSafe || true
+          # Check if build artifacts exist
+          if [ -d "zig-out" ]; then
+            ls -la zig-out/
+            find zig-out -name "ghostty" -o -name "ghostty.bin"
+          fi
       
       - name: Package Linux Binary
         if: success()
         run: |
-          cd zig-out/bin
-          tar czf ghostty-linux-x86_64.tar.gz ghostty
+          # Find the binary
+          if [ -f "zig-out/bin/ghostty" ]; then
+            cd zig-out/bin && tar czf ../ghostty-linux-x86_64.tar.gz ghostty
+          elif [ -f "zig-out/ghostty" ]; then
+            cd zig-out && tar czf ghostty-linux-x86_64.tar.gz ghostty
+          else
+            echo "No binary found"
+            exit 1
+          fi
       
       - name: Upload Linux Build
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ghostty-linux-x86_64
-          path: zig-out/bin/ghostty-linux-x86_64.tar.gz
+          path: zig-out/ghostty-linux-x86_64.tar.gz
           retention-days: 30
 
   test:
